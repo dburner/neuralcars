@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Drawing;
 
@@ -53,6 +54,45 @@ namespace GeneticCars
             }
 
             return populacija;
+        }
+
+        public ArrayList Load(string FileName, int count = int.MaxValue)
+        {
+            ArrayList arr = new ArrayList();
+
+            using (StreamReader sr = new StreamReader(File.OpenRead(FileName)))
+            {
+                string read = sr.ReadToEnd();
+
+                string[] networks = read.Split(new string[] { "Network" }, StringSplitOptions.RemoveEmptyEntries);
+
+                for (int i = 0; i < (networks.Length < count ? networks.Length : count); i++)
+                {
+                    string str = networks[i];
+
+                    Element e = new Element();
+                    e.network = new NeuralNetwork.Network(str.Trim());
+                    arr.Add(e);
+                }
+            }
+
+            return arr;
+        }
+
+        public void Write(string FileName)
+        {
+            ArrayList lst = new ArrayList();
+            lst.AddRange(populacija);
+
+            lst.Sort(new comparer());
+
+            using (StreamWriter sw = new StreamWriter(File.OpenWrite(FileName)))
+            {
+                foreach (Element e in lst)
+                {
+                    e.network.Write(sw);
+                }
+            }
         }
 
         void MarkAsBest(Element el)
