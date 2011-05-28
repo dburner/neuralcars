@@ -20,6 +20,7 @@ namespace GeneticCars
             Text = new ScreenText(ClientSize, ClientSize);
 
             Text.AddLine("NeuralCars3D", 240, 150, new SolidBrush(Color.Red), 40);
+            Text.AddLine("Avotrja: David Božjak, Aleksander Bešir", 580, 630, new SolidBrush(Color.White));
         }
 
         public void Draw()

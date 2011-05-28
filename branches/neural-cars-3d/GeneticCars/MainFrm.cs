@@ -43,10 +43,12 @@ namespace GeneticCars
         const int DefaultLoopFactor = 10;
         int LoopFactor = DefaultLoopFactor;
 
-        enum FormMode { MainMenu, Menu, Learning, Race }
-        FormMode Mode, PrevMode;
+        enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race }
+        FormMode Mode;
 
         MainMenu mainmenu;
+        RaceMenu racemenu;
+        LearningMenu learningmenu;
 
         #endregion
 
@@ -57,7 +59,7 @@ namespace GeneticCars
         {
             this.Title = "NeuralCars3D";
 
-            Mode = PrevMode = FormMode.MainMenu;
+            Mode = FormMode.MainMenu;
 
             Keyboard.KeyUp += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyUp);
             Keyboard.KeyDown += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyDown);
@@ -72,28 +74,51 @@ namespace GeneticCars
                     Exit();
                     return;
                 }
-
-                if ((Mode == FormMode.Learning) || (Mode == FormMode.Race))
+                else if (Mode == FormMode.Learning)
                 {
-                    PrevMode = Mode;
-                    Mode = FormMode.Menu;
+                    Mode = FormMode.LearningMenu;
                 }
-                else Mode = PrevMode;
+                else if (Mode == FormMode.LearningMenu)
+                {
+                    Mode = FormMode.Learning;
+                }
+                else if (Mode == FormMode.Race)
+                {
+                    Mode = FormMode.RaceMenu;
+                }
+                else if (Mode == FormMode.RaceMenu)
+                {
+                    Mode = FormMode.Race;
+                }
 
                 return;
             }
-
-            if ((Mode == FormMode.MainMenu) || (Mode == FormMode.Menu))
+            else if (Keyboard[OpenTK.Input.Key.Up])
             {
                 if (Mode == FormMode.MainMenu)
-                {
-                    if (Keyboard[OpenTK.Input.Key.Up])
-                        mainmenu.MoveUp();
-                    else if (Keyboard[OpenTK.Input.Key.Down])
-                        mainmenu.MoveDown();
-                    else if (Keyboard[OpenTK.Input.Key.Enter])
-                        mainmenu.Submit();
-                }
+                    mainmenu.MoveUp();
+                else if (Mode == FormMode.RaceMenu)
+                    racemenu.MoveUp();
+                else if (Mode == FormMode.LearningMenu)
+                    learningmenu.MoveUp();
+            }
+            else if (Keyboard[OpenTK.Input.Key.Down])
+            {
+                if (Mode == FormMode.MainMenu)
+                    mainmenu.MoveDown();
+                else if (Mode == FormMode.RaceMenu)
+                    racemenu.MoveDown();
+                else if (Mode == FormMode.LearningMenu)
+                    learningmenu.MoveDown();
+            }
+            else if (Keyboard[OpenTK.Input.Key.Enter])
+            {
+                if (Mode == FormMode.MainMenu)
+                    mainmenu.Submit();
+                else if (Mode == FormMode.RaceMenu)
+                    racemenu.Submit();
+                else if (Mode == FormMode.LearningMenu)
+                    learningmenu.Submit();
             }
         }
 
@@ -119,6 +144,14 @@ namespace GeneticCars
 
             mainmenu = new MainMenu(this.Size);
             mainmenu.SubmitExit = delegate() { Exit(); };
+            mainmenu.SubmitLearningMode = delegate() { Mode = FormMode.Learning; };
+            mainmenu.SubmitRaceMode = delegate() { Mode = FormMode.Race; };
+
+            racemenu = new RaceMenu(this.Size);
+            racemenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
+
+            learningmenu = new LearningMenu(this.Size);
+            learningmenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
 
             PlayingGround.ImportFromSCG();
 
@@ -170,8 +203,11 @@ namespace GeneticCars
                 case FormMode.MainMenu:
                     DrawMainMenu();
                     break;
-                case FormMode.Menu:
-                    DrawMenu();
+                case FormMode.RaceMenu:
+                    DrawRaceMenu();
+                    break;
+                case FormMode.LearningMenu:
+                    DrawLearningMenu();
                     break;
                 case FormMode.Learning:
                     DrawRaceMode();
@@ -195,9 +231,14 @@ namespace GeneticCars
             mainmenu.Draw();
         }
 
-        private void DrawMenu()
+        private void DrawRaceMenu()
         {
+            racemenu.Draw();
+        }
 
+        private void DrawLearningMenu()
+        {
+            learningmenu.Draw();
         }
 
         private void DrawLearningMode()
