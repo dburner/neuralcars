@@ -157,20 +157,6 @@ namespace GeneticCars
 
         #endregion
 
-        #region OnUpdateFrame
-
-        protected override void OnKeyPress(OpenTK.KeyPressEventArgs e)
-        {
-            base.OnKeyPress(e);
-        }
-
-        protected override void OnUpdateFrame(FrameEventArgs e)
-        {
-            base.OnUpdateFrame(e);
-        }
-
-        #endregion
-
         #region OnRenderFrame
 
         protected override void OnRenderFrame(FrameEventArgs e)
