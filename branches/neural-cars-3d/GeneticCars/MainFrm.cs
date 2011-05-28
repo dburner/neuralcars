@@ -128,7 +128,6 @@ namespace GeneticCars
             //Inicializiramo genetske algoritme
             AI = new GenetskiAlgoritmi();
             tekmovalci = AI.Inicializiraj();
-
         }
 
         #endregion
