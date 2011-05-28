@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Threading;
 using System.Drawing;
+using System.Drawing.Imaging;
 
 using System.Collections;
 using System.ComponentModel;
@@ -43,7 +44,9 @@ namespace GeneticCars
         int LoopFactor = DefaultLoopFactor;
 
         enum FormMode { MainMenu, Menu, Learning, Race }
-        FormMode Mode;
+        FormMode Mode, PrevMode;
+
+        MainMenu mainmenu;
 
         #endregion
 
@@ -54,7 +57,50 @@ namespace GeneticCars
         {
             this.Title = "NeuralCars3D";
 
-            Mode = FormMode.MainMenu;
+            Mode = PrevMode = FormMode.MainMenu;
+
+            Keyboard.KeyUp += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyUp);
+            Keyboard.KeyDown += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyDown);
+        }
+
+        void Keyboard_KeyDown(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
+        {
+            if (Keyboard[OpenTK.Input.Key.Escape])
+            {
+                if (Mode == FormMode.MainMenu)
+                {
+                    Exit();
+                    return;
+                }
+
+                if ((Mode == FormMode.Learning) || (Mode == FormMode.Race))
+                {
+                    PrevMode = Mode;
+                    Mode = FormMode.Menu;
+                }
+                else Mode = PrevMode;
+
+                return;
+            }
+
+            if ((Mode == FormMode.MainMenu) || (Mode == FormMode.Menu))
+            {
+                if (Mode == FormMode.MainMenu)
+                {
+                    if (Keyboard[OpenTK.Input.Key.Up])
+                        mainmenu.MoveUp();
+                    else if (Keyboard[OpenTK.Input.Key.Down])
+                        mainmenu.MoveDown();
+                    else if (Keyboard[OpenTK.Input.Key.Enter])
+                        mainmenu.Submit();
+                }
+            }
+        }
+
+        void Keyboard_KeyUp(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
+        {
+            if ((Mode != FormMode.Learning) && (Mode != FormMode.Race))
+                return;
         }
 
         #endregion
@@ -70,6 +116,9 @@ namespace GeneticCars
 
             //Inicializiramo form size
             this.Size = new Size(820, 650);
+
+            mainmenu = new MainMenu(this.Size);
+            mainmenu.SubmitExit = delegate() { Exit(); };
 
             PlayingGround.ImportFromSCG();
 
@@ -111,31 +160,20 @@ namespace GeneticCars
 
         #region OnUpdateFrame
 
-        /// <summary>
-        /// Prepares the next frame for rendering.
-        /// </summary>
-        /// <remarks>
-        /// Place your control logic here. This is the place to respond to user input,
-        /// update object positions etc.
-        /// </remarks>
+        protected override void OnKeyPress(OpenTK.KeyPressEventArgs e)
+        {
+            base.OnKeyPress(e);
+        }
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
-            if (Keyboard[OpenTK.Input.Key.Escape])
-            {
-                this.Exit();
-                return;
-            }
         }
 
         #endregion
 
         #region OnRenderFrame
 
-        /// <summary>
-        /// Place your rendering code here.
-        /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -169,7 +207,7 @@ namespace GeneticCars
 
         private void DrawMainMenu()
         {
-
+            mainmenu.Draw();
         }
 
         private void DrawMenu()
