@@ -70,7 +70,6 @@
     </Compile>
     <Compile Include="Functions.cs" />
     <Compile Include="GenetskiAlgoritmi.cs" />
-    <Compile Include="IMenu.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="ScreenText.cs" />
