@@ -21,6 +21,8 @@ namespace GeneticCars
     {
         #region Fields
 
+        #region Igralec
+
         const float rotation_speed = 180.0f;
         float angle;
 
@@ -35,10 +37,12 @@ namespace GeneticCars
         enum Accelerating { Ne = 0, Naprej = 1, Nazaj = -1 };
         Accelerating acc = Accelerating.Ne;
 
+        #endregion
+
         GenetskiAlgoritmi AI;
         ArrayList tekmovalci;
 
-        static readonly int Dolzina = 1100;
+        const int Dolzina = 1100;
 
         const int DefaultLoopFactor = 10;
         int LoopFactor = DefaultLoopFactor;
@@ -49,6 +53,8 @@ namespace GeneticCars
         MainMenu mainmenu;
         RaceMenu racemenu;
         LearningMenu learningmenu;
+
+        const string FileName = @"C:\Users\Bozjak\Documents\File.txt";
 
         #endregion
 
@@ -152,6 +158,9 @@ namespace GeneticCars
 
             learningmenu = new LearningMenu(this.Size);
             learningmenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
+            learningmenu.SubmitLoad = delegate() { AI.Load(FileName); Mode = FormMode.Learning; };
+            learningmenu.SubmitSave = delegate() { AI.Write(FileName); Mode = FormMode.MainMenu; };
+            learningmenu.SubmitRestart = delegate() { tekmovalci = AI.Inicializiraj(); Mode = FormMode.Learning; };
 
             PlayingGround.ImportFromSCG();
 

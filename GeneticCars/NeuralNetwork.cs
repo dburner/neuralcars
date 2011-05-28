@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 
 namespace GeneticCars
 {
@@ -8,7 +11,7 @@ namespace GeneticCars
     {
         #region LegWork
 
-        class Neuron
+        public class Neuron
         {
             public readonly int stInput;
 
@@ -25,9 +28,36 @@ namespace GeneticCars
                     Weight[i] = (Functions.rand.NextDouble() * 2) - 1;
                 }
             }
+
+            public Neuron(string line)
+            {
+                string[] inputs = line.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                List<double> list = new List<double>();
+
+                foreach (string str in inputs)
+                {
+                    list.Add(Convert.ToDouble(str, CultureInfo.InvariantCulture));
+                }
+
+                Weight = list.ToArray();
+                stInput = Weight.Length - 1;
+            }
+
+            public void Write (StreamWriter sw)
+            {
+                sw.WriteLine("Neuron");
+
+                string line = string.Empty;
+
+                foreach (double w in Weight)
+                    line += w.ToString(CultureInfo.InvariantCulture) + " ";
+
+                sw.WriteLine(line);
+            }
         }
 
-        class Layer
+        public class Layer
         {
             public readonly int stNeuron;
             public Neuron[] Neuron;
@@ -43,9 +73,34 @@ namespace GeneticCars
                     Neuron[i] = new Neuron(stInput);
                 }
             }
+
+            public Layer(string input)
+            {
+                string[] neurons = input.Split(new string[] { "Neuron", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+                List<Neuron> list = new List<Neuron>();
+
+                foreach (string str in neurons)
+                {
+                    list.Add(new Neuron(str.Trim()));
+                }
+
+                Neuron = list.ToArray();
+                stNeuron = Neuron.Length;
+            }
+
+            public void Write(StreamWriter sw)
+            {
+                sw.WriteLine("Layer");
+
+                foreach (Neuron n in Neuron)
+                {
+                    n.Write(sw);
+                }
+            }
         }
 
-        class Network
+        public class Network
         {
             readonly int stInput;
             readonly int stOutput;
@@ -70,6 +125,37 @@ namespace GeneticCars
                 }
 
                 Layers[stHiddenLayers] = new Layer(output, stNeuronosPerHiddenLayer);
+            }
+
+            public Network(string input)
+            {
+                string[] layers = input.Split(new string[] { "Layer" }, StringSplitOptions.RemoveEmptyEntries);
+
+                List<Layer> list = new List<Layer>();
+
+                foreach (string str in layers)
+                {
+                    list.Add(new Layer(str.Trim()));
+                }
+
+                Layers = list.ToArray();
+
+                stInput = Layers[0].Neuron[0].stInput;
+                stOutput = Layers[Layers.Length - 1].stNeuron;
+                stHiddenLayers = Layers.Length - 1;
+
+                if (stHiddenLayers > 0)
+                    stNeuronosPerHiddenLayer = Layers[1].stNeuron;
+            }
+
+            public void Write(StreamWriter sw)
+            {
+                sw.WriteLine("Network");
+
+                foreach (Layer l in Layers)
+                {
+                    l.Write(sw);
+                }
             }
 
             public double[] Update(double[] inputs)
@@ -152,7 +238,7 @@ namespace GeneticCars
         #endregion
 
         Bitmap BackgroundImage;
-        Network network;
+        public Network network;
         
         const int stInputov = 9;
         const int stOutputov = 2;
