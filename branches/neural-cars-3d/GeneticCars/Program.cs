@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace GeneticCars
 {
@@ -13,14 +10,9 @@ namespace GeneticCars
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Form1());
-
-            using (T03_Immediate_Mode_Cube example = new T03_Immediate_Mode_Cube())
+            using (MainFrm mainform = new MainFrm())
             {
-                //Utilities.SetWindowTitle(example);
-                example.Run(30.0, 0.0);
+                mainform.Run(30.0, 0.0);
             }
 
         }
