@@ -40,7 +40,7 @@ namespace GeneticCars
         #endregion
 
         GenetskiAlgoritmi AI;
-        ArrayList tekmovalci;
+        List<Element> tekmovalci;
 
         const int Dolzina = 1100;
 
@@ -152,20 +152,24 @@ namespace GeneticCars
             //Inicializiramo form size
             this.Size = new Size(820, 650);
 
+            #region MenuActions
+
             mainmenu = new MainMenu(this.Size);
             mainmenu.SubmitExit = delegate() { Exit(); };
-            mainmenu.SubmitLearningMode = delegate() { Mode = FormMode.Learning; SwittchFromMenu(); };
-            mainmenu.SubmitRaceMode = delegate() { Mode = FormMode.Race; SwittchFromMenu(); };
+            mainmenu.SubmitLearningMode = delegate() { SwittchFromMenu(); Mode = FormMode.Learning; };
+            mainmenu.SubmitRaceMode = delegate() { SetUpRace(); SwittchFromMenu(); Mode = FormMode.Race; };
 
             racemenu = new RaceMenu(this.Size);
             racemenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
-            racemenu.SubmitRestart = delegate() { Mode = FormMode.Race; SwittchFromMenu(); };
+            racemenu.SubmitRestart = delegate() { SetUpRace(); SwittchFromMenu(); Mode = FormMode.Race; };
 
             learningmenu = new LearningMenu(this.Size);
             learningmenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
-            learningmenu.SubmitLoad = delegate() { AI.Load(FileName); Mode = FormMode.Learning; SwittchFromMenu(); };
+            learningmenu.SubmitLoad = delegate() { AI.Load(FileName); SwittchFromMenu(); Mode = FormMode.Learning; };
             learningmenu.SubmitSave = delegate() { AI.Write(FileName); Mode = FormMode.MainMenu; };
-            learningmenu.SubmitRestart = delegate() { tekmovalci = AI.Inicializiraj(); Mode = FormMode.Learning; SwittchFromMenu(); };
+            learningmenu.SubmitRestart = delegate() { tekmovalci = AI.Inicializiraj(); SwittchFromMenu(); Mode = FormMode.Learning; };
+
+            #endregion
 
             PlayingGround.ImportFromSCG();
 
@@ -222,7 +226,7 @@ namespace GeneticCars
                     DrawLearningMenu();
                     break;
                 case FormMode.Learning:
-                    DrawRaceMode();
+                    DrawLearningMode();
                     break;
                 case FormMode.Race:
                     DrawRaceMode();
@@ -256,11 +260,13 @@ namespace GeneticCars
         private void DrawLearningMode()
         {
             DrawGround();
+            DrawLearningRace();
         }
 
         private void DrawRaceMode()
         {
             DrawGround();
+            DrawRace();
         }
 
         private void DrawGround()
@@ -336,11 +342,113 @@ namespace GeneticCars
             GL.End();
         }
 
+        private void DrawLearningRace()
+        {
+            if (tekmovalci != null)
+            {
+                double threshold = Avto.CostOfBest - 1590;
+
+                foreach (Element element in tekmovalci)
+                {
+                    if (((element.Cost > threshold) || (element.risiCrte)) && (element != AI.Best))
+                        element.PaintOpenGL();
+                }
+            }
+
+            if (AI.Best != null) AI.Best.PaintOpenGL();
+            igralec.PaintOpenGL();
+        }
+
+        private void DrawRace()
+        {
+            igralec.PaintOpenGL();
+
+            foreach (Element element in tekmovalci)
+            {
+                element.PaintOpenGL();
+            }
+        }
+
         private void SwittchFromMenu()
         {
             OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreateOrthographic(820, 650, 1, 30);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref perspective);
+        }
+
+        #endregion
+
+        #region GameLoop
+
+        double BestPlayerScore = 0;
+
+        int turn = 0;
+        DateTime CompletedTurn = DateTime.Now;
+        TimeSpan FrameTime = TimeSpan.FromMilliseconds(30);
+
+        DateTime FPS = DateTime.Now;
+
+        void LearningModeGameLoop()
+        {
+            igralec.Turn((float)Turn);
+            igralec.Accelerate((float)acc);
+
+            igralec.Update();
+
+            if (turn > Dolzina)
+            {
+                turn = 0;
+
+                Avto.CostOfBest = 0;
+                tekmovalci = AI.PripraviTekmovalce();
+
+                if (igralec.Cost > BestPlayerScore) BestPlayerScore = igralec.Cost;
+                igralec.Reset();
+
+                if (fastForward && LoopFactor < 200) LoopFactor++;
+            }
+
+            //AI tekmovalci:
+            int loop = 1;
+
+            if (fastForward)
+            {
+                loop *= LoopFactor;
+            }
+
+            for (int i = 0; (i < loop) && (turn <= Dolzina); i++)
+            {
+                turn++;
+
+                foreach (Element element in tekmovalci)
+                {
+                    element.Update();
+                }
+            }
+
+            while ((DateTime.Now - CompletedTurn) < FrameTime)
+            {
+                Thread.Sleep(1);
+            }
+
+            CompletedTurn = DateTime.Now;
+        }
+
+        void SetUpRace()
+        {
+            AI.Load(FileName, 3);
+
+            //Nastimaj pozicije
+        }
+
+        void RaceModeGameLoop()
+        {
+            igralec.Turn((float)Turn);
+            igralec.Accelerate((float)acc);
+
+            igralec.Update();
+
+            //foreach ()
         }
 
         #endregion

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace GeneticCars
 {
-    class comparer : IComparer
+    class comparer : IComparer<Element>
     {
         #region IComparer Members
 
-        int IComparer.Compare(object x, object y)
+        public int Compare(Element x, Element y)
         {
             if ((x is Element) && (y is Element))
             {
@@ -37,14 +37,14 @@ namespace GeneticCars
         Element NajbolsiElement = null;
         public Element Best { get { return NajbolsiElement; } }
 
-        ArrayList populacija = new ArrayList();
+        List<Element> populacija = new List<Element>();
 
         public GenetskiAlgoritmi()
         {
             BackgroundImage = PlayingGround.field;
         }
 
-        public ArrayList Inicializiraj()
+        public List<Element> Inicializiraj()
         {
             for (int i = 0; i < velikost_populacije; i++)
             {
@@ -56,9 +56,9 @@ namespace GeneticCars
             return populacija;
         }
 
-        public ArrayList Load(string FileName, int count = int.MaxValue)
+        public List<Element> Load(string FileName, int count = int.MaxValue)
         {
-            ArrayList arr = new ArrayList();
+            List<Element> arr = new List<Element>();
 
             using (StreamReader sr = new StreamReader(File.OpenRead(FileName)))
             {
@@ -81,7 +81,7 @@ namespace GeneticCars
 
         public void Write(string FileName)
         {
-            ArrayList lst = new ArrayList();
+            List<Element> lst = new List<Element>();
             lst.AddRange(populacija);
 
             lst.Sort(new comparer());
@@ -111,11 +111,11 @@ namespace GeneticCars
             if (el.Cost > BestCost) BestCost = el.Cost;
         }
 
-        public ArrayList PripraviTekmovalce()
+        public List<Element> PripraviTekmovalce()
         {
             //pobijemo slabe
 
-            ArrayList lst = new ArrayList();
+            List<Element> lst = new List<Element>();
             lst.AddRange(populacija);
 
             lst.Sort(new comparer());
@@ -128,7 +128,7 @@ namespace GeneticCars
             MarkAsBest((Element)lst[lst.Count - 1]);
             lst = null;
 
-            ArrayList novaPopulacija = new ArrayList();
+            List<Element> novaPopulacija = new List<Element>();
             
             //Elitest survives
             novaPopulacija.Add(NajbolsiElement);
