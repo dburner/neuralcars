@@ -65,12 +65,12 @@ namespace GeneticCars
                 foreach (Element element in tekmovalci)
                 {
                     if (((element.Cost > threshold) || (element.risiCrte)) && (element != AI.Best))
-                        element.Paint(e.Graphics);
+                        element.PaintOpenGL(); // Spremenil Alex
                 }
             }
 
-            if (AI.Best != null) AI.Best.Paint(e.Graphics);
-            igralec.Paint(e.Graphics);
+            if (AI.Best != null) AI.Best.PaintOpenGL();  // Spremenil Alex
+            igralec.PaintOpenGL();  // Spremenil Alex
         }
 
         void GameLoop()

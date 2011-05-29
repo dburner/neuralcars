@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 
+using OpenTK.Graphics.OpenGL; // Dodal Alex
+
 namespace GeneticCars
 {
     class Avto
@@ -30,6 +32,7 @@ namespace GeneticCars
 
         protected int najblizjaTocka = 0;
         protected int steviloPrevozenih = 0;
+        protected Color barvaAvtomobila; // Dodal Alex
 
         protected double cost = 0;
         public double Cost
@@ -44,6 +47,7 @@ namespace GeneticCars
 
         public Avto(Color color, bool fill)
         {
+            barvaAvtomobila = color; // Dodal Alex
             BackgroundImage = PlayingGround.field;
             //init image
             InitImage(color, fill);
@@ -107,33 +111,55 @@ namespace GeneticCars
             risiCrte = risicrte;
         }
 
-        public void Paint(Graphics g)
+        public void PaintOpenGL()
         {
-            g.DrawImage(RotateImage(image, angle), Position);
 
-            if (risiCrte)
-            {
-                g.DrawImage(pot, new Point(0, 0));
+            RotateImage(image, angle);
+            Point p = this.Pozicija;
+
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.PushMatrix();
+            GL.LoadIdentity();
+            GL.Translate(p.X - 410, -(p.Y) + 325, -3.5);
+            GL.Rotate(-angle, 0, 0, 1);
+
+            GL.Begin(BeginMode.Quads);
+            GL.Color3(this.barvaAvtomobila);
+
+            GL.Vertex3(-7, +5, 0);
+            GL.Vertex3(+7, +5, 0);
+            GL.Vertex3(+7, -5, 0);
+            GL.Vertex3(-7, -5, 0);
+
+            GL.End();
+
+            GL.PopMatrix();
+
+            //g.DrawImage(RotateImage(image, angle), Position);
+
+            //if (risiCrte)
+            //{
+            //    g.DrawImage(pot, new Point(0, 0));
                 
-                const double stInputov = 9;
-                const double kot = 180 / (stInputov - 1);
+            //    const double stInputov = 9;
+            //    const double kot = 180 / (stInputov - 1);
 
-                //dorisemo crte.
-                for (int i = 0; i < stInputov; i++)
-                {
-                    Point Poz = Pozicija;
-                    float a = angle + (float)(90 - (i * kot));
+            //    //dorisemo crte.
+            //    for (int i = 0; i < stInputov; i++)
+            //    {
+            //        Point Poz = Pozicija;
+            //        float a = angle + (float)(90 - (i * kot));
 
-                    double rad = Functions.DegreeToRadian(a);
+            //        double rad = Functions.DegreeToRadian(a);
 
-                    Poz.X += (int)(Doseg * Math.Cos(rad));
-                    Poz.Y += (int)(Doseg * Math.Sin(rad));
+            //        Poz.X += (int)(Doseg * Math.Cos(rad));
+            //        Poz.Y += (int)(Doseg * Math.Sin(rad));
 
-                    Pen p = new Pen(Color.LightBlue, 2);
-                    if (i == 4) p = new Pen(Color.HotPink, 2);
-                    g.DrawLine(p, Pozicija, Poz);
-                }
-            }
+            //        Pen p = new Pen(Color.LightBlue, 2);
+            //        if (i == 4) p = new Pen(Color.HotPink, 2);
+            //        g.DrawLine(p, Pozicija, Poz);
+            //    }
+            //}
         }
 
         public void Turn(float x)
