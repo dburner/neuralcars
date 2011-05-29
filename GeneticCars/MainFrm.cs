@@ -73,7 +73,7 @@ namespace GeneticCars
 
         void Keyboard_KeyDown(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
         {
-            if (Keyboard[OpenTK.Input.Key.Escape])
+            if (e.Key == OpenTK.Input.Key.Escape)
             {
                 if (Mode == FormMode.MainMenu)
                 {
@@ -103,7 +103,7 @@ namespace GeneticCars
 
                 return;
             }
-            else if (Keyboard[OpenTK.Input.Key.Up])
+            else if (e.Key == OpenTK.Input.Key.Up)
             {
                 if (Mode == FormMode.MainMenu)
                     mainmenu.MoveUp();
@@ -111,8 +111,10 @@ namespace GeneticCars
                     racemenu.MoveUp();
                 else if (Mode == FormMode.LearningMenu)
                     learningmenu.MoveUp();
+                else if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    acc = Accelerating.Naprej; // Dodal Alex
             }
-            else if (Keyboard[OpenTK.Input.Key.Down])
+            else if (e.Key == OpenTK.Input.Key.Down)
             {
                 if (Mode == FormMode.MainMenu)
                     mainmenu.MoveDown();
@@ -120,8 +122,10 @@ namespace GeneticCars
                     racemenu.MoveDown();
                 else if (Mode == FormMode.LearningMenu)
                     learningmenu.MoveDown();
+                else if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    acc = Accelerating.Nazaj; // Dodal Alex
             }
-            else if (Keyboard[OpenTK.Input.Key.Enter])
+            else if (e.Key == OpenTK.Input.Key.Enter)
             {
                 if (Mode == FormMode.MainMenu)
                     mainmenu.Submit();
@@ -130,12 +134,40 @@ namespace GeneticCars
                 else if (Mode == FormMode.LearningMenu)
                     learningmenu.Submit();
             }
+            else if (e.Key == OpenTK.Input.Key.Left)
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    Turn = Turning.Levo; // Dodal Alex
+            }
+            else if (e.Key == OpenTK.Input.Key.Right)
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    Turn = Turning.Desno; // Dodal Alex
+            }
         }
 
         void Keyboard_KeyUp(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
         {
-            if ((Mode != FormMode.Learning) && (Mode != FormMode.Race))
-                return;
+            if (e.Key == OpenTK.Input.Key.Right) // Dodal Alex
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    Turn = Turning.Ne; // Dodal Alex
+            }
+            else if (e.Key == OpenTK.Input.Key.Left) // Dodal Alex
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    Turn = Turning.Ne; // Dodal Alex
+            }
+            else if (e.Key == OpenTK.Input.Key.Up) // Dodal Alex
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    acc = Accelerating.Ne; // Dodal Alex
+            }
+            else if (e.Key == OpenTK.Input.Key.Down) // Dodal Alex
+            {
+                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
+                    acc = Accelerating.Ne; // Dodal Alex
+            }
         }
 
         #endregion
@@ -350,12 +382,18 @@ namespace GeneticCars
 
                 foreach (Element element in tekmovalci)
                 {
+                    element.Update(); // Dodal Alex
                     if (((element.Cost > threshold) || (element.risiCrte)) && (element != AI.Best))
+                    {
                         element.PaintOpenGL();
+                    }
                 }
             }
 
             if (AI.Best != null) AI.Best.PaintOpenGL();
+            igralec.Accelerate((float)acc); // Dodal Alex
+            igralec.Turn((float)Turn); // Dodal Alex
+            igralec.Update(); // Dodal Alex
             igralec.PaintOpenGL();
         }
 
