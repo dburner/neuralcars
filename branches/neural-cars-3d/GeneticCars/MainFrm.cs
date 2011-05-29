@@ -87,6 +87,8 @@ namespace GeneticCars
                 else if (Mode == FormMode.LearningMenu)
                 {
                     Mode = FormMode.Learning;
+
+                    SwittchFromMenu();
                 }
                 else if (Mode == FormMode.Race)
                 {
@@ -95,6 +97,8 @@ namespace GeneticCars
                 else if (Mode == FormMode.RaceMenu)
                 {
                     Mode = FormMode.Race;
+
+                    SwittchFromMenu();
                 }
 
                 return;
@@ -150,17 +154,18 @@ namespace GeneticCars
 
             mainmenu = new MainMenu(this.Size);
             mainmenu.SubmitExit = delegate() { Exit(); };
-            mainmenu.SubmitLearningMode = delegate() { Mode = FormMode.Learning; };
-            mainmenu.SubmitRaceMode = delegate() { Mode = FormMode.Race; };
+            mainmenu.SubmitLearningMode = delegate() { Mode = FormMode.Learning; SwittchFromMenu(); };
+            mainmenu.SubmitRaceMode = delegate() { Mode = FormMode.Race; SwittchFromMenu(); };
 
             racemenu = new RaceMenu(this.Size);
             racemenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
+            racemenu.SubmitRestart = delegate() { Mode = FormMode.Race; SwittchFromMenu(); };
 
             learningmenu = new LearningMenu(this.Size);
             learningmenu.SubmitExitToMain = delegate() { Mode = FormMode.MainMenu; };
-            learningmenu.SubmitLoad = delegate() { AI.Load(FileName); Mode = FormMode.Learning; };
+            learningmenu.SubmitLoad = delegate() { AI.Load(FileName); Mode = FormMode.Learning; SwittchFromMenu(); };
             learningmenu.SubmitSave = delegate() { AI.Write(FileName); Mode = FormMode.MainMenu; };
-            learningmenu.SubmitRestart = delegate() { tekmovalci = AI.Inicializiraj(); Mode = FormMode.Learning; };
+            learningmenu.SubmitRestart = delegate() { tekmovalci = AI.Inicializiraj(); Mode = FormMode.Learning; SwittchFromMenu(); };
 
             PlayingGround.ImportFromSCG();
 
@@ -192,9 +197,7 @@ namespace GeneticCars
             double aspect_ratio = Width / (double)Height;
 
             //OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, (float)aspect_ratio, 1, 64);
-            OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreateOrthographic(820, 650, 1, 30);
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadMatrix(ref perspective);
+            SwittchFromMenu();
         }
 
         #endregion
@@ -331,6 +334,13 @@ namespace GeneticCars
             }
 
             GL.End();
+        }
+
+        private void SwittchFromMenu()
+        {
+            OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreateOrthographic(820, 650, 1, 30);
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadMatrix(ref perspective);
         }
 
         #endregion
