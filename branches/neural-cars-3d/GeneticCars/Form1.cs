@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -24,7 +24,7 @@ namespace GeneticCars
         Accelerating acc = Accelerating.Ne;
 
         GenetskiAlgoritmi AI;
-        ArrayList tekmovalci;
+        List<Element> tekmovalci;
 
         static readonly int Dolzina = 1100;
 
