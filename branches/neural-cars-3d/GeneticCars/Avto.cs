@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 using OpenTK.Graphics.OpenGL; // Dodal Alex
@@ -22,6 +23,8 @@ namespace GeneticCars
         
         static readonly PointF StartingPoint = PlayingGround.StartPlace;
         PointF Position = new PointF(StartingPoint.X, StartingPoint.Y);
+
+        public const double Radious = 8;
 
         object pozLocker = new object();
         public Point Pozicija
@@ -66,10 +69,16 @@ namespace GeneticCars
 
         public Avto(Color color, bool fill)
         {
-            barvaAvtomobila = color; // Dodal Alex
+            barvaAvtomobila = color;
             BackgroundImage = PlayingGround.field;
             //init image
             InitImage(color, fill);
+        }
+
+        public void SetStartPoz(int dx, int dy)
+        {
+            Position.X = PlayingGround.StartPlace.X + dx;
+            Position.Y = PlayingGround.StartPlace.Y + dy;
         }
 
         public virtual void Reset()
@@ -83,6 +92,7 @@ namespace GeneticCars
 
             angle = 0;
             Aceleration = 0;
+            Lap = 0;
 
             if (risiCrte)
             {
@@ -306,6 +316,74 @@ namespace GeneticCars
 
             //Izracunamo se status:
             GetStatus();
+        }
+        
+        public void Update(List<Element> ComputerPlayers, Avto Player)
+        {
+            bool collision = false;
+
+            if (CheckCollision(this, (Avto)Player))
+            {
+                collision = true;
+                CollisionResponse(this, (Avto)Player);
+            }
+
+            foreach (Avto e in ComputerPlayers)
+            {
+                if (CheckCollision(this, (Avto)e))
+                {
+                    collision = true;
+                    CollisionResponse(this, (Avto)e);
+                    break;
+                }
+            }
+
+            if (!collision) Update();
+        }
+
+        private static bool CheckCollision(Avto p1, Avto p2)
+        {
+            if (p1 == p2)
+                return false;
+
+            if ((p1.CollisionDisabled-- > 0) ||
+                (p2.CollisionDisabled-- > 0))
+                return false;
+
+            double razdX = Math.Sqrt(Math.Pow(p1.Pozicija.X - p2.Pozicija.X, 2));
+            double razdY = Math.Sqrt(Math.Pow(p1.Pozicija.Y - p2.Pozicija.Y, 2));
+
+            return (razdX + razdY) < (2 * Radious);
+        }
+
+        public bool Player = false;
+
+        int coldis = 0;
+        int CollisionDisabled
+        {
+            get { return coldis; }
+            set
+            {
+                coldis = value;
+                this.barvaAvtomobila = coldis > 0 ? (Player ? Color.DarkBlue : Color.DarkRed) : (Player ? Color.Blue : Color.Red);
+            }
+        }
+
+        private void CollisionResponse(Avto p1, Avto p2)
+        {
+            //throw new NotImplementedException();
+#warning TEMP, make Collision response
+
+            //Popoln odboj:
+            float temp = p2.Aceleration;
+            p2.Aceleration = p1.Aceleration;
+            p1.Aceleration = temp;
+
+            temp = p2.angle;
+            p2.angle = p1.angle;
+            p1.angle = temp;
+
+            p1.CollisionDisabled = p2.CollisionDisabled = 200;
         }
 
         void DolociPodlago()

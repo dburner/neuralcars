@@ -151,6 +151,10 @@ namespace GeneticCars
                 if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
                     Turn = Turning.Desno; // Dodal Alex
             }
+            else if (e.Key == OpenTK.Input.Key.Space)
+            {
+                fastForward = !fastForward;
+            }
         }
 
         void Keyboard_KeyUp(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
@@ -220,6 +224,7 @@ namespace GeneticCars
 
             //avto ki ga vozi igralec
             igralec = new Avto(Color.Blue, true);
+            igralec.Player = true;
 
             //Inicializiramo genetske algoritme
             AI = new GenetskiAlgoritmi();
@@ -435,9 +440,12 @@ namespace GeneticCars
         void ExitWorking()
         {
             end = true;
-            WorkingThread.Join();
-            WorkingThread.Abort();
-            WorkingThread = null;
+            if (WorkingThread != null)
+            {
+                WorkingThread.Join();
+                WorkingThread.Abort();
+                WorkingThread = null;
+            }
         }
 
         #region Learning
@@ -569,6 +577,12 @@ namespace GeneticCars
             igralec.Reset();
 
             //Nastimaj pozicije
+            igralec.SetStartPoz(-20, 0);
+            tekmovalci[0].SetStartPoz(-20, -20);
+            tekmovalci[1].SetStartPoz(0, -20);
+            tekmovalci[2].SetStartPoz(0, 0);
+            tekmovalci[3].SetStartPoz(+20, 0);
+            tekmovalci[4].SetStartPoz(+20, -20);
 
             //Pozeni
             WorkingThread = new Thread(new ThreadStart(RaceModeGameLoop));
@@ -600,17 +614,18 @@ namespace GeneticCars
                 igralec.Turn((float)Turn);
                 igralec.Accelerate((float)acc);
 
-                igralec.Update();
+                igralec.Update(tekmovalci, igralec);
 
                 if (igralec.Lap == NumLaps)
                 {
                     //winnder = igralec
+                    end = true;
                     break;
                 }
 
                 foreach (Element e in tekmovalci)
                 {
-                    e.Update();
+                    e.Update(tekmovalci, igralec);
 
                     if (e.Lap == NumLaps)
                     {
