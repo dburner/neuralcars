@@ -237,6 +237,7 @@ namespace GeneticCars
         
         #endregion
 
+        object backgroundLocker = new Object();
         Bitmap BackgroundImage;
         public Network network;
         
@@ -311,11 +312,14 @@ namespace GeneticCars
 
         bool AliJeOvira(Point p)
         {
-            if ((p.X < 0) || (p.X >= BackgroundImage.Width) || (p.Y < 0) || (p.Y >= BackgroundImage.Height)) return false;
+            lock (backgroundLocker)
+            {
+                if ((p.X < 0) || (p.X >= BackgroundImage.Width) || (p.Y < 0) || (p.Y >= BackgroundImage.Height)) return false;
 
-            if (BackgroundImage.GetPixel(p.X, p.Y).ToArgb() != Color.White.ToArgb())
-                return false;
-            else return true;
+                if (BackgroundImage.GetPixel(p.X, p.Y).ToArgb() != Color.White.ToArgb())
+                    return false;
+                else return true;
+            }
         }
     }
 }
