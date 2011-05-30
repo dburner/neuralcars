@@ -10,8 +10,12 @@ namespace GeneticCars
         enum Podlaga { Cesta, Trava };
         Podlaga podlaga;
 
+        object imageLocker = new object();
         Bitmap image;
+
         Bitmap pot;
+
+        object backgroundLocker = new object();
         static Bitmap BackgroundImage;
 
         public const int Doseg = 80;
@@ -19,7 +23,20 @@ namespace GeneticCars
         static readonly PointF StartingPoint = PlayingGround.StartPlace;
         PointF Position = new PointF(StartingPoint.X, StartingPoint.Y);
 
-        public Point Pozicija { get { return new Point((int)Position.X + image.Width / 2, (int)Position.Y + image.Height / 2); } }
+        object pozLocker = new object();
+        public Point Pozicija
+        { 
+            get 
+            {
+                lock (pozLocker)
+                {
+                    lock (imageLocker)
+                    {
+                        return new Point((int)Position.X + image.Width / 2, (int)Position.Y + image.Height / 2);
+                    }
+                }
+            } 
+        }
 
         PointF Velocity = new PointF();
 
@@ -29,6 +46,8 @@ namespace GeneticCars
         float Aceleration = 0;
 
         public bool risiCrte = false;
+
+        public int Lap { get; private set; }
 
         protected int najblizjaTocka = 0;
         protected int steviloPrevozenih = 0;
@@ -55,14 +74,23 @@ namespace GeneticCars
 
         public virtual void Reset()
         {
-            Position = new PointF(StartingPoint.X, StartingPoint.Y);
+            lock (pozLocker)
+            {
+                Position = new PointF(StartingPoint.X, StartingPoint.Y);
+            }
+
             Velocity = new PointF();
 
             angle = 0;
             Aceleration = 0;
 
             if (risiCrte)
-                pot = new Bitmap(BackgroundImage.Width, BackgroundImage.Height);
+            {
+                lock (backgroundLocker)
+                {
+                    pot = new Bitmap(BackgroundImage.Width, BackgroundImage.Height);
+                }
+            }
             else if (pot != null)
             {
                 pot.Dispose();
@@ -77,27 +105,30 @@ namespace GeneticCars
 
         private void InitImage(Color color, bool fill)
         {
-            image = new Bitmap(20, 20);
-
-            using (Graphics g = Graphics.FromImage(image))
+            lock (imageLocker)
             {
-                Brush brush = new SolidBrush(Color.Black);
-                
-                if (fill)
+                image = new Bitmap(20, 20);
+
+                using (Graphics g = Graphics.FromImage(image))
                 {
-                    Brush pen = new SolidBrush(color);
-                    g.FillRectangle(pen, 5, 5, 13, 10);
+                    Brush brush = new SolidBrush(Color.Black);
+
+                    if (fill)
+                    {
+                        Brush pen = new SolidBrush(color);
+                        g.FillRectangle(pen, 5, 5, 13, 10);
+                    }
+                    else
+                    {
+                        Pen pen = new Pen(color);
+                        g.DrawRectangle(pen, 5, 5, 13, 10);
+                    }
+
+                    g.FillRectangle(brush, 7, 3, 4, 4);
+                    g.FillRectangle(brush, 13, 3, 4, 4);
+                    g.FillRectangle(brush, 7, 13, 4, 4);
+                    g.FillRectangle(brush, 13, 13, 4, 4);
                 }
-                else
-                {
-                    Pen pen = new Pen(color);
-                    g.DrawRectangle(pen, 5, 5, 13, 10);
-                }
-                
-                g.FillRectangle(brush, 7, 3, 4, 4);
-                g.FillRectangle(brush, 13, 3, 4, 4);
-                g.FillRectangle(brush, 7, 13, 4, 4);
-                g.FillRectangle(brush, 13, 13, 4, 4);
             }
         }
 
@@ -113,8 +144,10 @@ namespace GeneticCars
 
         public void PaintOpenGL()
         {
-
-            RotateImage(image, angle);
+            lock (imageLocker)
+            {
+                RotateImage(image, angle);
+            }
             Point p = this.Pozicija;
 
             GL.MatrixMode(MatrixMode.Modelview);
@@ -198,6 +231,7 @@ namespace GeneticCars
         {
             double raz;
             int nas = najblizjaTocka;
+            int prevNajblizjaTocka = najblizjaTocka;
 
             double bestcost = cost;
 
@@ -231,6 +265,12 @@ namespace GeneticCars
 
             if (cost < bestcost) cost = bestcost;   //Zagotovimo, da se uposteva najbolsi rezultat kar ga je avto kdaj naredil.
             if (cost > CostOfBest) CostOfBest = cost;
+
+            //Določimo v katerem krogu je.
+            if ((najblizjaTocka != prevNajblizjaTocka) && (prejsnaTocka == (PlayingGround.Points.Length - 1)) && (najblizjaTocka == 0))
+            {
+                Lap++;
+            }
         }
 
         public virtual void Update()
@@ -250,8 +290,11 @@ namespace GeneticCars
 
             PointF staraP = new PointF(Pozicija.X, Pozicija.Y);
 
-            Position.X += Velocity.X;
-            Position.Y += Velocity.Y;
+            lock (pozLocker)
+            {
+                Position.X += Velocity.X;
+                Position.Y += Velocity.Y;
+            }
 
             if (risiCrte)
             {
@@ -267,18 +310,30 @@ namespace GeneticCars
 
         void DolociPodlago()
         {
-            int X = (int)Position.X + image.Width / 2;
-            int Y = (int)Position.Y + image.Height / 2;
+            int X;
+            int Y;
 
-            if ((X < 0) || (X >= BackgroundImage.Width) || (Y < 0) || (Y >= BackgroundImage.Height))
+            lock (pozLocker)
             {
-                podlaga = Podlaga.Cesta;
-                return;
+                lock (imageLocker)
+                {
+                    X = (int)Position.X + image.Width / 2;
+                    Y = (int)Position.Y + image.Height / 2;
+                }
             }
 
-            if (BackgroundImage.GetPixel(X, Y).ToArgb() != Color.White.ToArgb())
-                podlaga = Podlaga.Trava;
-            else podlaga = Podlaga.Cesta;
+            lock (backgroundLocker)
+            {
+                if ((X < 0) || (X >= BackgroundImage.Width) || (Y < 0) || (Y >= BackgroundImage.Height))
+                {
+                    podlaga = Podlaga.Cesta;
+                    return;
+                }
+
+                if (BackgroundImage.GetPixel(X, Y).ToArgb() != Color.White.ToArgb())
+                    podlaga = Podlaga.Trava;
+                else podlaga = Podlaga.Cesta;
+            }
         }
 
         Bitmap RotateImage(Bitmap b, float angle)

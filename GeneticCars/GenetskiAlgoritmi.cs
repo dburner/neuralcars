@@ -56,6 +56,14 @@ namespace GeneticCars
             return populacija;
         }
 
+        public List<Element> Reset()
+        {
+            populacija.Clear();
+            populacija = Inicializiraj();
+
+            return populacija;
+        }
+
         public List<Element> Load(string FileName, int count = int.MaxValue)
         {
             List<Element> arr = new List<Element>();
@@ -88,8 +96,9 @@ namespace GeneticCars
 
             using (StreamWriter sw = new StreamWriter(File.OpenWrite(FileName)))
             {
-                foreach (Element e in lst)
+                for (int i = lst.Count - 1; i >= 0; i--)
                 {
+                    Element e = lst[i];
                     e.network.Write(sw);
                 }
             }
