@@ -357,7 +357,7 @@ namespace GeneticCars
             /*
              * Nikakor mi ni uspelo narediti collision reaction, ki bi bil vsaj soliden.
              * Ideja tega je, da se naključno izbere avto, ki bo izrinjen. Izrivamo ga v smeri, ki jo narekuje
-             * drug avto, v vsaki dimenziji psoebaj, dokler se avta ne prekrivata več.
+             * drug avto, v vsaki dimenziji posebej, dokler se avta ne prekrivata več.
              * 
              * V teoriji se sliši kar ok, a izgleda bolj kot ne crap. Ampak jst nimam ideje kako bi naredil boljše, probal sem
              * 100 različnih stvari!
@@ -376,19 +376,25 @@ namespace GeneticCars
                 umikaj = p1;
             }
 
-            for (float faktor = 0.2f; CheckCollisionX(p1, p2); faktor += 0.01f)
+            float faktor = 0.05f;
+
+            while (CheckCollisionX(p1, p2))
             {
                 lock (pozLocker)
                 {
-                    umikaj.Position.X += faktor * rini.Velocity.X;
+                    float X =  faktor * rini.Velocity.X;
+                    if (X == 0) X = 0.1f * (rini.Position.X - umikaj.Position.X);
+                    umikaj.Position.X += X;
                 }
             }
 
-            for (float faktor = 0.2f; CheckCollisionY(p1, p2); faktor += 0.01f)
+            while(CheckCollisionY(p1, p2))
             {
                 lock (pozLocker)
                 {
-                    umikaj.Position.Y += faktor * rini.Velocity.Y;
+                    float Y = faktor * rini.Velocity.Y;
+                    if (Y == 0) Y = 0.1f * (rini.Position.Y - umikaj.Position.Y);
+                    umikaj.Position.Y += Y;
                 }
             }
         }
