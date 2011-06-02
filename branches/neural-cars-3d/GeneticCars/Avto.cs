@@ -350,21 +350,19 @@ namespace GeneticCars
 
         public bool Player = false;
 
-        /*int coldis = 0;
-        int CollisionDisabled
-        {
-            get { return coldis; }
-            set
-            {
-                coldis = value;
-                this.barvaAvtomobila = coldis > 0 ? (Player ? Color.DarkBlue : Color.DarkRed) : (Player ? Color.Blue : Color.Red);
-            }
-        }*/
-
         Random rand = new Random();
 
         private void CollisionResponse(Avto p1, Avto p2)
         {
+            /*
+             * Nikakor mi ni uspelo narediti collision reaction, ki bi bil vsaj soliden.
+             * Ideja tega je, da se naključno izbere avto, ki bo izrinjen. Izrivamo ga v smeri, ki jo narekuje
+             * drug avto, v vsaki dimenziji psoebaj, dokler se avta ne prekrivata več.
+             * 
+             * V teoriji se sliši kar ok, a izgleda bolj kot ne crap. Ampak jst nimam ideje kako bi naredil boljše, probal sem
+             * 100 različnih stvari!
+             */
+
             Avto rini, umikaj;
 
             if (rand.NextDouble() > 0.5)
