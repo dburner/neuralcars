@@ -177,32 +177,6 @@ namespace GeneticCars
             GL.End();
 
             GL.PopMatrix();
-
-            //g.DrawImage(RotateImage(image, angle), Position);
-
-            //if (risiCrte)
-            //{
-            //    g.DrawImage(pot, new Point(0, 0));
-                
-            //    const double stInputov = 9;
-            //    const double kot = 180 / (stInputov - 1);
-
-            //    //dorisemo crte.
-            //    for (int i = 0; i < stInputov; i++)
-            //    {
-            //        Point Poz = Pozicija;
-            //        float a = angle + (float)(90 - (i * kot));
-
-            //        double rad = Functions.DegreeToRadian(a);
-
-            //        Poz.X += (int)(Doseg * Math.Cos(rad));
-            //        Poz.Y += (int)(Doseg * Math.Sin(rad));
-
-            //        Pen p = new Pen(Color.LightBlue, 2);
-            //        if (i == 4) p = new Pen(Color.HotPink, 2);
-            //        g.DrawLine(p, Pozicija, Poz);
-            //    }
-            //}
         }
 
         public void Turn(float x)
@@ -320,11 +294,10 @@ namespace GeneticCars
         
         public void Update(List<Element> ComputerPlayers, Avto Player)
         {
-            bool collision = false;
+            Update();
 
             if (CheckCollision(this, (Avto)Player))
             {
-                collision = true;
                 CollisionResponse(this, (Avto)Player);
             }
 
@@ -332,13 +305,31 @@ namespace GeneticCars
             {
                 if (CheckCollision(this, (Avto)e))
                 {
-                    collision = true;
                     CollisionResponse(this, (Avto)e);
                     break;
                 }
             }
 
-            if (!collision) Update();
+            //Izracunamo se status:
+            GetStatus();
+        }
+
+        private static bool CheckCollisionX(Avto p1, Avto p2)
+        {
+            if (p1 == p2)
+                return false;
+
+            double razdX = Math.Sqrt(Math.Pow(p1.Pozicija.X - p2.Pozicija.X, 2));
+            return razdX < (2 * Radious);
+        }
+
+        private static bool CheckCollisionY(Avto p1, Avto p2)
+        {
+            if (p1 == p2)
+                return false;
+
+            double razdY = Math.Sqrt(Math.Pow(p1.Pozicija.Y - p2.Pozicija.Y, 2));
+            return razdY < (2 * Radious);
         }
 
         private static bool CheckCollision(Avto p1, Avto p2)
@@ -346,19 +337,20 @@ namespace GeneticCars
             if (p1 == p2)
                 return false;
 
-            if ((p1.CollisionDisabled-- > 0) ||
+            /*if ((p1.CollisionDisabled-- > 0) ||
                 (p2.CollisionDisabled-- > 0))
                 return false;
+            */
+            //double razdX = Math.Sqrt(Math.Pow(p1.Pozicija.X - p2.Pozicija.X, 2));
+            //double razdY = Math.Sqrt(Math.Pow(p1.Pozicija.Y - p2.Pozicija.Y, 2));
 
-            double razdX = Math.Sqrt(Math.Pow(p1.Pozicija.X - p2.Pozicija.X, 2));
-            double razdY = Math.Sqrt(Math.Pow(p1.Pozicija.Y - p2.Pozicija.Y, 2));
-
-            return (razdX + razdY) < (2 * Radious);
+            //return (razdX + razdY) < (2 * Radious);
+            return CheckCollisionX(p1, p2) && CheckCollisionY(p1, p2);
         }
 
         public bool Player = false;
 
-        int coldis = 0;
+        /*int coldis = 0;
         int CollisionDisabled
         {
             get { return coldis; }
@@ -367,23 +359,40 @@ namespace GeneticCars
                 coldis = value;
                 this.barvaAvtomobila = coldis > 0 ? (Player ? Color.DarkBlue : Color.DarkRed) : (Player ? Color.Blue : Color.Red);
             }
-        }
+        }*/
+
+        Random rand = new Random();
 
         private void CollisionResponse(Avto p1, Avto p2)
         {
-            //throw new NotImplementedException();
-#warning TEMP, make Collision response
+            Avto rini, umikaj;
 
-            //Popoln odboj:
-            float temp = p2.Aceleration;
-            p2.Aceleration = p1.Aceleration;
-            p1.Aceleration = temp;
+            if (rand.NextDouble() > 0.5)
+            {
+                rini = p1;
+                umikaj = p2;
+            }
+            else
+            {
+                rini = p2;
+                umikaj = p1;
+            }
 
-            temp = p2.angle;
-            p2.angle = p1.angle;
-            p1.angle = temp;
+            for (float faktor = 0.2f; CheckCollisionX(p1, p2); faktor += 0.01f)
+            {
+                lock (pozLocker)
+                {
+                    umikaj.Position.X += faktor * rini.Velocity.X;
+                }
+            }
 
-            p1.CollisionDisabled = p2.CollisionDisabled = 200;
+            for (float faktor = 0.2f; CheckCollisionY(p1, p2); faktor += 0.01f)
+            {
+                lock (pozLocker)
+                {
+                    umikaj.Position.Y += faktor * rini.Velocity.Y;
+                }
+            }
         }
 
         void DolociPodlago()

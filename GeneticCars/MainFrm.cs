@@ -36,6 +36,8 @@ namespace GeneticCars
 
         #endregion
 
+        bool PlayerWins = false;
+
         GenetskiAlgoritmi AI;
         object tekmovalciLocker = new object();
         List<Element> tekmovalci;
@@ -50,12 +52,13 @@ namespace GeneticCars
 
         bool fastForward = false;
 
-        enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race }
+        enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race, Winner }
         FormMode Mode;
 
         MainMenu mainmenu;
         RaceMenu racemenu;
         LearningMenu learningmenu;
+        WinnerMenu playerWins, playerLoses;
 
         const string FileName = @"C:\Users\Bozjak\Documents\File.txt";
 
@@ -106,6 +109,10 @@ namespace GeneticCars
                     pause = false;
 
                     SwittchFromMenu();
+                }
+                else if (Mode == FormMode.Winner)
+                {
+                    Mode = FormMode.MainMenu;
                 }
 
                 return;
@@ -159,25 +166,25 @@ namespace GeneticCars
 
         void Keyboard_KeyUp(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
         {
-            if (e.Key == OpenTK.Input.Key.Right) // Dodal Alex
+            if (e.Key == OpenTK.Input.Key.Right)
             {
-                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
-                    Turn = Turning.Ne; // Dodal Alex
+                if (Mode == FormMode.Learning || Mode == FormMode.Race)
+                    Turn = Turning.Ne;
             }
-            else if (e.Key == OpenTK.Input.Key.Left) // Dodal Alex
+            else if (e.Key == OpenTK.Input.Key.Left)
             {
-                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
-                    Turn = Turning.Ne; // Dodal Alex
+                if (Mode == FormMode.Learning || Mode == FormMode.Race)
+                    Turn = Turning.Ne;
             }
-            else if (e.Key == OpenTK.Input.Key.Up) // Dodal Alex
+            else if (e.Key == OpenTK.Input.Key.Up) 
             {
-                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
-                    acc = Accelerating.Ne; // Dodal Alex
+                if (Mode == FormMode.Learning || Mode == FormMode.Race)
+                    acc = Accelerating.Ne;
             }
-            else if (e.Key == OpenTK.Input.Key.Down) // Dodal Alex
+            else if (e.Key == OpenTK.Input.Key.Down)
             {
-                if (Mode == FormMode.Learning || Mode == FormMode.Race) // Dodal Alex
-                    acc = Accelerating.Ne; // Dodal Alex
+                if (Mode == FormMode.Learning || Mode == FormMode.Race)
+                    acc = Accelerating.Ne;
             }
         }
 
@@ -217,6 +224,9 @@ namespace GeneticCars
             learningmenu.SubmitLoad = delegate() { LearningLoad(); pause = false; SwittchFromMenu(); Mode = FormMode.Learning; };
             learningmenu.SubmitSave = delegate() { AI.Write(FileName); Mode = FormMode.MainMenu; };
             learningmenu.SubmitRestart = delegate() { RestartLearning(); pause = false; SwittchFromMenu(); Mode = FormMode.Learning; };
+
+            playerWins = new WinnerMenu(this.Size, true);
+            playerLoses = new WinnerMenu(this.Size, false);
 
             #endregion
 
@@ -266,13 +276,13 @@ namespace GeneticCars
             switch (Mode)
             {
                 case FormMode.MainMenu:
-                    DrawMainMenu();
+                    mainmenu.Draw();
                     break;
                 case FormMode.RaceMenu:
-                    DrawRaceMenu();
+                    racemenu.Draw();
                     break;
                 case FormMode.LearningMenu:
-                    DrawLearningMenu();
+                    learningmenu.Draw();
                     break;
                 case FormMode.Learning:
                     DrawLearningMode();
@@ -280,7 +290,10 @@ namespace GeneticCars
                 case FormMode.Race:
                     DrawRaceMode();
                     break;
-
+                case FormMode.Winner:
+                    if (PlayerWins) playerWins.Draw();
+                    else playerLoses.Draw();
+                    break;
             }
 
             this.SwapBuffers();
@@ -290,21 +303,6 @@ namespace GeneticCars
         #endregion
 
         #region Draw
-
-        private void DrawMainMenu()
-        {
-            mainmenu.Draw();
-        }
-
-        private void DrawRaceMenu()
-        {
-            racemenu.Draw();
-        }
-
-        private void DrawLearningMenu()
-        {
-            learningmenu.Draw();
-        }
 
         private void DrawLearningMode()
         {
@@ -443,7 +441,6 @@ namespace GeneticCars
             if (WorkingThread != null)
             {
                 WorkingThread.Join();
-                WorkingThread.Abort();
                 WorkingThread = null;
             }
         }
@@ -562,7 +559,7 @@ namespace GeneticCars
 
         void RestartRace()
         {
-            
+            SetUpRace();
         }
 
         void SetUpRace()
@@ -618,7 +615,8 @@ namespace GeneticCars
 
                 if (igralec.Lap == NumLaps)
                 {
-                    //winnder = igralec
+                    PlayerWins = true;
+               
                     end = true;
                     break;
                 }
@@ -629,7 +627,7 @@ namespace GeneticCars
 
                     if (e.Lap == NumLaps)
                     {
-                        //winner = e.
+                        PlayerWins = false;
                         end = true;
                         break;
                     }
@@ -643,8 +641,7 @@ namespace GeneticCars
                 CompletedTurn = DateTime.Now;
             }
 
-#warning Make winner scren.
-            Mode = FormMode.MainMenu;
+            Mode = FormMode.Winner;
             WorkingThread = null;
         }
 
