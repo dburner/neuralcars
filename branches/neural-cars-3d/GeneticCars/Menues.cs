@@ -80,4 +80,25 @@ namespace GeneticCars
                 SubmitExitToMain();
         }
     }
+
+    class WinnerMenu : Menu
+    {
+        public WinnerMenu(Size ClientSize, bool PlayerWon)
+            : base(ClientSize)
+        {
+            if (PlayerWon)
+            {
+                AddSelectableLine("Congratulations! You won!", 250, 350, 20);
+            }
+            else
+            {
+                AddSelectableLine("Unfortunately you lost...", 260, 350, 20);
+            }
+        }
+
+        public override void Submit()
+        {
+
+        }
+    }
 }

@@ -19,6 +19,11 @@ namespace GeneticCars
         {
             Text = new ScreenText(ClientSize, ClientSize);
 
+            AddNececeryLines();
+        }
+
+        private void AddNececeryLines()
+        {
             Text.AddLine("NeuralCars3D", 240, 150, new SolidBrush(Color.Red), 40);
             Text.AddLine("Avotrja: David Božjak, Aleksander Bešir", 580, 630, new SolidBrush(Color.White));
         }
@@ -28,10 +33,15 @@ namespace GeneticCars
             Text.Draw();
         }
 
-        protected void AddSelectableLine(string s, float x, float y, float size = 10)
+        protected void AddSelectableLine(string s, float x, float y, float size = 10, bool makeselected = false)
         {
             Brush b = SelectableLines.Count == 0 ? SelectedItemBrush : ItemBrush;
             SelectableLines.Add(Text.AddLine(s, x, y, b, size));
+
+            if (makeselected)
+            {
+                SelectedLine = SelectableLines[SelectableLines.Count - 1];
+            }
         }
 
         public void MoveUp()
@@ -53,6 +63,14 @@ namespace GeneticCars
         }
 
         abstract public void Submit();
+
+        public void Clear()
+        {
+            Text.Clear();
+            AddNececeryLines();
+            SelectableLines.Clear();
+            SelectedLine = 0;
+        }
 
         public void Dispose()
         {
