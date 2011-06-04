@@ -165,9 +165,10 @@ namespace GeneticCars
             GL.Rotate(-angle, 0, 0, 1);
             GL.Rotate(90, 1, 0, 0);
             GL.Rotate(90, 0, 1, 0);
-            GL.Scale(1, 1, 1); // 0.05
+            GL.Scale(2, 2, 2); // 0.05
 
-            GL.BindTexture(TextureTarget.Texture2D, MainFrm.meshTex);
+            if (this.Player) GL.BindTexture(TextureTarget.Texture2D, MainFrm.meshBlueTex);
+            else GL.BindTexture(TextureTarget.Texture2D, MainFrm.meshRedTex);
             GL.Begin(BeginMode.Triangles);
 
             foreach (Meshomatic.Tri t in MainFrm.avtoModel.Tris)
@@ -195,10 +196,27 @@ namespace GeneticCars
                 GL.MatrixMode(MatrixMode.Projection);
                 OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 820 / 650, 1, 10000);
                 GL.LoadMatrix(ref perspective);
-                GL.Rotate(15, 1, 0, 0);
-                GL.Rotate(-90, 1, 0, 0);
-                GL.Rotate(90 + this.angle, 0, 0, 1);
-                GL.Translate(-p.X + 410, (p.Y) - 325, -30);
+
+                if (MainFrm.getView() == MainFrm.ViewMode.FirstPerson)
+                {
+                    GL.Rotate(15, 1, 0, 0);
+                    GL.Rotate(-90, 1, 0, 0);
+                    GL.Rotate(90 + this.angle, 0, 0, 1);
+                    GL.Translate(-p.X + 410, (p.Y) - 325, -30);
+                }
+                else if (MainFrm.getView() == MainFrm.ViewMode.Top)
+                {
+                    GL.Translate(0, 0, -1000);
+                }
+                else if (MainFrm.getView() == MainFrm.ViewMode.TopFollowing)
+                {
+                    GL.Translate(-p.X + 410, +(p.Y) - 325, -500);
+                }
+                else if (MainFrm.getView() == MainFrm.ViewMode.TopFollowingRelative)
+                {
+                    GL.Rotate(90 + this.angle, 0, 0, 1);
+                    GL.Translate(-p.X + 410, +(p.Y) - 325, -500);
+                }
 
                 GL.PopMatrix();
             }

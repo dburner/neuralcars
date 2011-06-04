@@ -54,8 +54,9 @@ namespace GeneticCars
 
         enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race, Winner }
         FormMode Mode;
-        enum ViewMode { Top, TopFollowing, FirstPerson }
-        ViewMode View;
+        public enum ViewMode { Top, TopFollowing, FirstPerson, TopFollowingRelative }
+        static ViewMode View;
+        public static ViewMode getView() { return View; }
 
         MainMenu mainmenu;
         RaceMenu racemenu;
@@ -66,9 +67,11 @@ namespace GeneticCars
 
         #region OpenGLVars
         public static Meshomatic.MeshData avtoModel;
-        public static uint meshTex;
+        public static uint meshRedTex;
+        public static uint meshBlueTex;
         public static uint grassTex;
         public static uint roadTex;
+        public static uint brickTex;
         string vShaderSource = @"
 void main() {
 	gl_Position = ftransform();
@@ -184,6 +187,13 @@ void main() {
             {
                 fastForward = !fastForward;
             }
+            else if (e.Key == OpenTK.Input.Key.W)
+            {
+                if (View == ViewMode.Top) View = ViewMode.FirstPerson;
+                else if (View == ViewMode.FirstPerson) View = ViewMode.TopFollowing;
+                else if (View == ViewMode.TopFollowing) View = ViewMode.TopFollowingRelative;
+                else View = ViewMode.Top;
+            }
         }
 
         void Keyboard_KeyUp(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
@@ -279,10 +289,12 @@ void main() {
 
             // Naložimo modele za OpenGL
             Meshomatic.ObjLoader avtoModelLoader = new Meshomatic.ObjLoader();
-            avtoModel = avtoModelLoader.LoadFile("models/Tuned cartoon car.obj");
-            meshTex = LoadTex("texture/wood.jpg");
+            avtoModel = avtoModelLoader.LoadFile("models/SA-15 OBJ.obj");
+            meshRedTex  = LoadTex("texture/tank-red.jpg");
+            meshBlueTex = LoadTex("texture/tank-blue.jpg");
             grassTex = LoadTex("texture/grass.png");
             roadTex = LoadTex("texture/road.jpg");
+            brickTex = LoadTex("texture/brick.jpg");
 
             //Inicializiramo form size
             this.Size = new Size(820, 650);
@@ -390,10 +402,92 @@ void main() {
             GL.BindTexture(TextureTarget.Texture2D, grassTex);
             GL.Begin(BeginMode.Quads);
 
+            GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +325, -4.1f);
+            GL.TexCoord2(1, 0);
             GL.Vertex3(+410, +325, -4.1f);
+            GL.TexCoord2(1, 1);
             GL.Vertex3(+410, -325, -4.1f);
+            GL.TexCoord2(0, 1);
             GL.Vertex3(-410, -325, -4.1f);
+
+            GL.End();
+
+            GL.PopMatrix();
+
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.PushMatrix();
+
+            GL.BindTexture(TextureTarget.Texture2D, brickTex);
+            GL.Begin(BeginMode.Quads);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(-410, +325, -4.1f);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(-410, +325, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(+410, +325, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(+410, +325, -4.1f);
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(-410, +325, 20);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(-410, +345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(+410, +345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(+410, +325, 20);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(+410, -325, -4.1f);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(+410, -325, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(-410, -325, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(-410, -325, -4.1f);
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(+410, -325, 20);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(+410, -345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(-410, -345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(-410, -325, 20);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(-410, +345, -4.1f);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(-410, +345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(-410, -345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(-410, -345, -4.1f);
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(-410, +345, 20);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(-430, +345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(-430, -345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(-410, -345, 20);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(+410, -345, -4.1f);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(+410, -345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(+410, +345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(+410, +345, -4.1f);
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(+410, -345, 20);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(+430, -345, 20);
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(+430, +345, 20);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(+410, +345, 20);
 
             GL.End();
 
@@ -431,9 +525,13 @@ void main() {
                 float px = 0.5f * thickness * (-dy);
                 float py = 0.5f * thickness * dx;
 
+                GL.TexCoord2(0, 0);
                 GL.Vertex3(x0 - px - 410, -(y0 + py) + 325, -4.0f);
+                GL.TexCoord2(1, 0);
                 GL.Vertex3(x1 - px - 410, -(y1 + py) + 325, -4.0f);
+                GL.TexCoord2(1, 1);
                 GL.Vertex3(x1 + px - 410, -(y1 - py) + 325, -4.0f);
+                GL.TexCoord2(0, 1);
                 GL.Vertex3(x0 + px - 410, -(y0 - py) + 325, -4.0f);
 
                 GL.End();
@@ -451,6 +549,7 @@ void main() {
 
                 for (float angle = 0; angle <= Math.PI * 2; angle += 0.01f)
                 {
+                    GL.TexCoord2(0.5 - Math.Sin(angle), 0.5 - Math.Cos(angle));
                     GL.Vertex3((x1 + Math.Sin(angle) * 35) - 410, -(y1 + Math.Cos(angle) * 35) + 325, -4.0f);
                 }
 
