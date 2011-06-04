@@ -154,10 +154,8 @@ namespace GeneticCars
 
         public void PaintOpenGL()
         {
-            lock (imageLocker)
-            {
-                RotateImage(image, angle);
-            }
+            RotateImage(image, angle);
+
             Point p = this.Pozicija;
 
             GL.MatrixMode(MatrixMode.Modelview);
@@ -456,20 +454,23 @@ namespace GeneticCars
 
         Bitmap RotateImage(Bitmap b, float angle)
         {
-            Bitmap newImage = new Bitmap(b.Width, b.Height);
-            
-            using (Graphics g = Graphics.FromImage(newImage))
+            lock (imageLocker)
             {
-                float x = (float)b.Width / 2;
-                float y = (float)b.Height / 2;
+                Bitmap newImage = new Bitmap(b.Width, b.Height);
 
-                g.TranslateTransform(x, y);
-                g.RotateTransform(angle);
-                g.TranslateTransform(-x, -y);
-                g.DrawImage(b, new Point(0, 0));
+                using (Graphics g = Graphics.FromImage(newImage))
+                {
+                    float x = (float)b.Width / 2;
+                    float y = (float)b.Height / 2;
+
+                    g.TranslateTransform(x, y);
+                    g.RotateTransform(angle);
+                    g.TranslateTransform(-x, -y);
+                    g.DrawImage(b, new Point(0, 0));
+                }
+
+                return newImage;
             }
-
-            return newImage;
         }
     }
 }
