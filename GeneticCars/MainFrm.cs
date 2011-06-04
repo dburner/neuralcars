@@ -24,7 +24,6 @@ namespace GeneticCars
         #region Igralec
 
         const float rotation_speed = 180.0f;
-        float angle;
 
         Avto igralec;
 
@@ -54,9 +53,9 @@ namespace GeneticCars
 
         enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race, Winner }
         FormMode Mode;
+
         public enum ViewMode { Top, TopFollowing, FirstPerson, TopFollowingRelative }
-        static ViewMode View;
-        public static ViewMode getView() { return View; }
+        public static ViewMode View { get; private set; }
 
         MainMenu mainmenu;
         RaceMenu racemenu;
@@ -72,18 +71,18 @@ namespace GeneticCars
         public static uint grassTex;
         public static uint roadTex;
         public static uint brickTex;
-        string vShaderSource = @"
-void main() {
-	gl_Position = ftransform();
-	gl_TexCoord[0] = gl_MultiTexCoord0;
-}
-";
-        string fShaderSource = @"
-uniform sampler2D tex;
-void main() {
-	gl_FragColor = texture2D(tex, gl_TexCoord[0].st);
-}
-";
+        const string vShaderSource = @"
+                                        void main() {
+	                                        gl_Position = ftransform();
+	                                        gl_TexCoord[0] = gl_MultiTexCoord0;
+                                        }
+                                        ";
+        const string fShaderSource = @"
+                                        uniform sampler2D tex;
+                                        void main() {
+	                                        gl_FragColor = texture2D(tex, gl_TexCoord[0].st);
+                                        }
+                                        ";
         #endregion
 
         #endregion
