@@ -294,7 +294,7 @@ void main() {
             meshBlueTex = LoadTex("texture/tank-blue.jpg");
             grassTex = LoadTex("texture/grass.png");
             roadTex = LoadTex("texture/road.jpg");
-            brickTex = LoadTex("texture/brick.jpg");
+            brickTex = LoadTex("texture/stone.jpg");
 
             //Inicializiramo form size
             this.Size = new Size(820, 650);
@@ -337,7 +337,8 @@ void main() {
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            GL.Viewport(0, 0, Width, Height);
+            //GL.Viewport(0, 0, Width, Height);
+            GL.Viewport(0, 0, 820, 650);
             SwittchFromMenu();
         }
         #endregion
@@ -404,11 +405,11 @@ void main() {
 
             GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +325, -4.1f);
-            GL.TexCoord2(1, 0);
+            GL.TexCoord2(32.5, 0);
             GL.Vertex3(+410, +325, -4.1f);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(32.5, 41);
             GL.Vertex3(+410, -325, -4.1f);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 41);
             GL.Vertex3(-410, -325, -4.1f);
 
             GL.End();
@@ -421,72 +422,76 @@ void main() {
             GL.BindTexture(TextureTarget.Texture2D, brickTex);
             GL.Begin(BeginMode.Quads);
 
+            // Zgornji rob
             GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +325, -4.1f);
             GL.TexCoord2(1, 0);
             GL.Vertex3(-410, +325, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 41);
             GL.Vertex3(+410, +325, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 41);
             GL.Vertex3(+410, +325, -4.1f);
             GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +325, 20);
             GL.TexCoord2(1, 0);
             GL.Vertex3(-410, +345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 41);
             GL.Vertex3(+410, +345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 41);
             GL.Vertex3(+410, +325, 20);
 
+            // Spodnji rob
             GL.TexCoord2(0, 0);
             GL.Vertex3(+410, -325, -4.1f);
             GL.TexCoord2(1, 0);
             GL.Vertex3(+410, -325, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 41);
             GL.Vertex3(-410, -325, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 41);
             GL.Vertex3(-410, -325, -4.1f);
             GL.TexCoord2(0, 0);
             GL.Vertex3(+410, -325, 20);
             GL.TexCoord2(1, 0);
             GL.Vertex3(+410, -345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 41);
             GL.Vertex3(-410, -345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 41);
             GL.Vertex3(-410, -325, 20);
 
+            // Levi rob
             GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +345, -4.1f);
             GL.TexCoord2(1, 0);
             GL.Vertex3(-410, +345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 32.5);
             GL.Vertex3(-410, -345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 32.5);
             GL.Vertex3(-410, -345, -4.1f);
             GL.TexCoord2(0, 0);
             GL.Vertex3(-410, +345, 20);
             GL.TexCoord2(1, 0);
             GL.Vertex3(-430, +345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 32.5);
             GL.Vertex3(-430, -345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 32.5);
             GL.Vertex3(-410, -345, 20);
 
+            // Desni rob
             GL.TexCoord2(0, 0);
             GL.Vertex3(+410, -345, -4.1f);
             GL.TexCoord2(1, 0);
             GL.Vertex3(+410, -345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 32.5);
             GL.Vertex3(+410, +345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 32.5);
             GL.Vertex3(+410, +345, -4.1f);
             GL.TexCoord2(0, 0);
             GL.Vertex3(+410, -345, 20);
             GL.TexCoord2(1, 0);
             GL.Vertex3(+430, -345, 20);
-            GL.TexCoord2(1, 1);
+            GL.TexCoord2(1, 32.5);
             GL.Vertex3(+430, +345, 20);
-            GL.TexCoord2(0, 1);
+            GL.TexCoord2(0, 32.5);
             GL.Vertex3(+410, +345, 20);
 
             GL.End();
