@@ -154,8 +154,10 @@ namespace GeneticCars
 
         public void PaintOpenGL()
         {
-
-            RotateImage(image, angle);
+            lock (imageLocker)
+            {
+                RotateImage(image, angle);
+            }
             Point p = this.Pozicija;
 
             GL.MatrixMode(MatrixMode.Modelview);
