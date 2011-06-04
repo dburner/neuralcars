@@ -67,6 +67,12 @@ namespace GeneticCars
 
         public static double CostOfBest = 0;
 
+        public bool Player = false;
+
+        Random rand = new Random();
+
+        #region Init
+
         public Avto(Color color, bool fill)
         {
             barvaAvtomobila = color;
@@ -142,6 +148,10 @@ namespace GeneticCars
             }
         }
 
+        #endregion
+
+        #region Paint
+
         public void setColor(Color c, bool fill)
         {
             InitImage(c, fill);
@@ -197,22 +207,22 @@ namespace GeneticCars
                 OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 820 / 650, 1, 10000);
                 GL.LoadMatrix(ref perspective);
 
-                if (MainFrm.getView() == MainFrm.ViewMode.FirstPerson)
+                if (MainFrm.View == MainFrm.ViewMode.FirstPerson)
                 {
                     GL.Rotate(15, 1, 0, 0);
                     GL.Rotate(-90, 1, 0, 0);
                     GL.Rotate(90 + this.angle, 0, 0, 1);
                     GL.Translate(-p.X + 410, (p.Y) - 325, -30);
                 }
-                else if (MainFrm.getView() == MainFrm.ViewMode.Top)
+                else if (MainFrm.View == MainFrm.ViewMode.Top)
                 {
                     GL.Translate(0, 0, -1100);
                 }
-                else if (MainFrm.getView() == MainFrm.ViewMode.TopFollowing)
+                else if (MainFrm.View == MainFrm.ViewMode.TopFollowing)
                 {
                     GL.Translate(-p.X + 410, +(p.Y) - 325, -500);
                 }
-                else if (MainFrm.getView() == MainFrm.ViewMode.TopFollowingRelative)
+                else if (MainFrm.View == MainFrm.ViewMode.TopFollowingRelative)
                 {
                     GL.Rotate(90 + this.angle, 0, 0, 1);
                     GL.Translate(-p.X + 410, +(p.Y) - 325, -500);
@@ -221,6 +231,31 @@ namespace GeneticCars
                 GL.PopMatrix();
             }
         }
+
+        Bitmap RotateImage(Bitmap b, float angle)
+        {
+            lock (imageLocker)
+            {
+                Bitmap newImage = new Bitmap(b.Width, b.Height);
+
+                using (Graphics g = Graphics.FromImage(newImage))
+                {
+                    float x = (float)b.Width / 2;
+                    float y = (float)b.Height / 2;
+
+                    g.TranslateTransform(x, y);
+                    g.RotateTransform(angle);
+                    g.TranslateTransform(-x, -y);
+                    g.DrawImage(b, new Point(0, 0));
+                }
+
+                return newImage;
+            }
+        }
+
+        #endregion
+
+        #region Control
 
         public void Turn(float x)
         {
@@ -246,13 +281,44 @@ namespace GeneticCars
         {
             System.Diagnostics.Debug.Assert(p1 != p2);
 
-            //double u = (((p3.X - p1.X)  * (p2.X - p1.X)) + ((p3.Y - p1.Y) * (p2.Y - p1.Y))) / (Math.Pow(Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2)), 2));
             double u = (((p3.X - p1.X) * (p2.X - p1.X)) + ((p3.Y - p1.Y) * (p2.Y - p1.Y))) / (Math.Pow(Math.Sqrt((p2.X - p1.X) * (p2.X - p1.X) + (p2.Y - p1.Y) * (p2.Y - p1.Y)), 2));
 
             Point rez = new Point((int)Math.Floor(p1.X + u * (p2.X - p1.X)), (int)Math.Floor(p1.Y + u * (p2.Y - p1.Y)));
 
             return rez;
         }
+
+        void DolociPodlago()
+        {
+            int X;
+            int Y;
+
+            lock (pozLocker)
+            {
+                lock (imageLocker)
+                {
+                    X = (int)Position.X + image.Width / 2;
+                    Y = (int)Position.Y + image.Height / 2;
+                }
+            }
+
+            lock (backgroundLocker)
+            {
+                if ((X < 0) || (X >= BackgroundImage.Width) || (Y < 0) || (Y >= BackgroundImage.Height))
+                {
+                    podlaga = Podlaga.Cesta;
+                    return;
+                }
+
+                if (BackgroundImage.GetPixel(X, Y).ToArgb() != Color.White.ToArgb())
+                    podlaga = Podlaga.Trava;
+                else podlaga = Podlaga.Cesta;
+            }
+        }
+
+        #endregion
+
+        #region Update
 
         public void GetStatus()
         {
@@ -357,6 +423,10 @@ namespace GeneticCars
             GetStatus();
         }
 
+        #endregion
+
+        #region Collision detection & reaction
+
         private static bool CheckCollisionX(Avto p1, Avto p2)
         {
             if (p1 == p2)
@@ -380,20 +450,8 @@ namespace GeneticCars
             if (p1 == p2)
                 return false;
 
-            /*if ((p1.CollisionDisabled-- > 0) ||
-                (p2.CollisionDisabled-- > 0))
-                return false;
-            */
-            //double razdX = Math.Sqrt(Math.Pow(p1.Pozicija.X - p2.Pozicija.X, 2));
-            //double razdY = Math.Sqrt(Math.Pow(p1.Pozicija.Y - p2.Pozicija.Y, 2));
-
-            //return (razdX + razdY) < (2 * Radious);
             return CheckCollisionX(p1, p2) && CheckCollisionY(p1, p2);
         }
-
-        public bool Player = false;
-
-        Random rand = new Random();
 
         private void CollisionResponse(Avto p1, Avto p2)
         {
@@ -419,76 +477,33 @@ namespace GeneticCars
                 umikaj = p1;
             }
 
-            float faktor = 0.05f;
+            const float faktor = 0.05f;
+            const float minPremik = 0.5f;
+
+            float X = faktor * rini.Velocity.X;
+            if (Math.Abs(X) < minPremik) X = minPremik * ((rini.Position.X - umikaj.Position.X) > 0 ? 1 : -1);
 
             while (CheckCollisionX(p1, p2))
             {
                 lock (pozLocker)
                 {
-                    float X =  faktor * rini.Velocity.X;
-                    if (X == 0) X = 0.1f * (rini.Position.X - umikaj.Position.X);
                     umikaj.Position.X += X;
                 }
             }
+
+            float Y = faktor * rini.Velocity.Y;
+            if (Math.Abs(Y) < minPremik) Y = minPremik * ((rini.Position.Y - umikaj.Position.Y) > 0 ? 1 : -1);
 
             while(CheckCollisionY(p1, p2))
             {
                 lock (pozLocker)
                 {
-                    float Y = faktor * rini.Velocity.Y;
-                    if (Y == 0) Y = 0.1f * (rini.Position.Y - umikaj.Position.Y);
                     umikaj.Position.Y += Y;
                 }
             }
         }
 
-        void DolociPodlago()
-        {
-            int X;
-            int Y;
+        #endregion
 
-            lock (pozLocker)
-            {
-                lock (imageLocker)
-                {
-                    X = (int)Position.X + image.Width / 2;
-                    Y = (int)Position.Y + image.Height / 2;
-                }
-            }
-
-            lock (backgroundLocker)
-            {
-                if ((X < 0) || (X >= BackgroundImage.Width) || (Y < 0) || (Y >= BackgroundImage.Height))
-                {
-                    podlaga = Podlaga.Cesta;
-                    return;
-                }
-
-                if (BackgroundImage.GetPixel(X, Y).ToArgb() != Color.White.ToArgb())
-                    podlaga = Podlaga.Trava;
-                else podlaga = Podlaga.Cesta;
-            }
-        }
-
-        Bitmap RotateImage(Bitmap b, float angle)
-        {
-            lock (imageLocker)
-            {
-                Bitmap newImage = new Bitmap(b.Width, b.Height);
-
-                using (Graphics g = Graphics.FromImage(newImage))
-                {
-                    float x = (float)b.Width / 2;
-                    float y = (float)b.Height / 2;
-
-                    g.TranslateTransform(x, y);
-                    g.RotateTransform(angle);
-                    g.TranslateTransform(-x, -y);
-                    g.DrawImage(b, new Point(0, 0));
-                }
-
-                return newImage;
-            }
-        }
     }
 }
