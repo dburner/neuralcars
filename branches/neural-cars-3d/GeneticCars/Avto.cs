@@ -206,7 +206,7 @@ namespace GeneticCars
                 }
                 else if (MainFrm.getView() == MainFrm.ViewMode.Top)
                 {
-                    GL.Translate(0, 0, -1000);
+                    GL.Translate(0, 0, -1100);
                 }
                 else if (MainFrm.getView() == MainFrm.ViewMode.TopFollowing)
                 {
