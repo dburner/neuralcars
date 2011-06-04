@@ -54,13 +54,34 @@ namespace GeneticCars
 
         enum FormMode { MainMenu, RaceMenu, LearningMenu, Learning, Race, Winner }
         FormMode Mode;
+        enum ViewMode { Top, TopFollowing, FirstPerson }
+        ViewMode View;
 
         MainMenu mainmenu;
         RaceMenu racemenu;
         LearningMenu learningmenu;
         WinnerMenu playerWins, playerLoses;
 
-        const string FileName = @"C:\Users\Bozjak\Documents\File.txt";
+        const string FileName = @".\saved\file.txt";
+
+        #region OpenGLVars
+        public static Meshomatic.MeshData avtoModel;
+        public static uint meshTex;
+        public static uint grassTex;
+        public static uint roadTex;
+        string vShaderSource = @"
+void main() {
+	gl_Position = ftransform();
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+";
+        string fShaderSource = @"
+uniform sampler2D tex;
+void main() {
+	gl_FragColor = texture2D(tex, gl_TexCoord[0].st);
+}
+";
+        #endregion
 
         #endregion
 
@@ -72,6 +93,7 @@ namespace GeneticCars
             this.Title = "NeuralCars3D";
 
             Mode = FormMode.MainMenu;
+            View = ViewMode.Top;
 
             Keyboard.KeyUp += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyUp);
             Keyboard.KeyDown += new EventHandler<OpenTK.Input.KeyboardKeyEventArgs>(Keyboard_KeyDown);
@@ -196,14 +218,71 @@ namespace GeneticCars
 
         #endregion
 
+        #region OpenGLMethods
+        int CompileShaders()
+        {
+            int programHandle, vHandle, fHandle;
+            vHandle = GL.CreateShader(ShaderType.VertexShader);
+            fHandle = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(vHandle, vShaderSource);
+            GL.ShaderSource(fHandle, fShaderSource);
+            GL.CompileShader(vHandle);
+            GL.CompileShader(fHandle);
+            Console.Write(GL.GetShaderInfoLog(vHandle));
+            Console.Write(GL.GetShaderInfoLog(fHandle));
+
+            programHandle = GL.CreateProgram();
+            GL.AttachShader(programHandle, vHandle);
+            GL.AttachShader(programHandle, fHandle);
+            GL.LinkProgram(programHandle);
+            Console.Write(GL.GetProgramInfoLog(programHandle));
+            return programHandle;
+        }
+        static uint LoadTex(string file)
+        {
+            Bitmap bitmap = new Bitmap(file);
+
+            uint texture;
+            GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+
+            GL.GenTextures(1, out texture);
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+
+            BitmapData data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
+                OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            bitmap.UnlockBits(data);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+            return texture;
+        }
+        #endregion
+
         #region OnLoad
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
-            GL.ClearColor(Color.DarkGreen);
+            // Inicializacija OpenGL
+            GL.ClearColor(Color.MidnightBlue);
             GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Texture2D);
+            GL.Enable(EnableCap.Lighting);
+            GL.Enable(EnableCap.Light0);
+            GL.Enable(EnableCap.ColorMaterial);
+            GL.UseProgram(CompileShaders());
+
+            // Naložimo modele za OpenGL
+            Meshomatic.ObjLoader avtoModelLoader = new Meshomatic.ObjLoader();
+            avtoModel = avtoModelLoader.LoadFile("models/Tuned cartoon car.obj");
+            meshTex = LoadTex("texture/wood.jpg");
+            grassTex = LoadTex("texture/grass.png");
+            roadTex = LoadTex("texture/road.jpg");
 
             //Inicializiramo form size
             this.Size = new Size(820, 650);
@@ -243,30 +322,15 @@ namespace GeneticCars
         #endregion
 
         #region OnResize
-
-        /// <summary>
-        /// Called when the user resizes the window.
-        /// </summary>
-        /// <param name="e">Contains the new width/height of the window.</param>
-        /// <remarks>
-        /// You want the OpenGL viewport to match the window. This is the place to do it!
-        /// </remarks>
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-
             GL.Viewport(0, 0, Width, Height);
-
-            double aspect_ratio = Width / (double)Height;
-
-            //OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, (float)aspect_ratio, 1, 64);
             SwittchFromMenu();
         }
-
         #endregion
 
         #region OnRenderFrame
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -299,42 +363,57 @@ namespace GeneticCars
             this.SwapBuffers();
             Thread.Sleep(1);
         }
-
         #endregion
 
         #region Draw
 
         private void DrawLearningMode()
         {
+            DrawEnvironment();
             DrawGround();
             DrawLearningRace();
         }
 
         private void DrawRaceMode()
         {
+            DrawEnvironment();
             DrawGround();
             DrawRace();
         }
 
-        private void DrawGround()
+        private void DrawEnvironment()
         {
-            GL.Begin(BeginMode.LineLoop);
-            GL.Color3(Color.White);
 
-            foreach (Point p in PlayingGround.Points)
-            {
-                GL.Vertex3(p.X - 410, -(p.Y) + 325, -4.0);
-            }
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.PushMatrix();
+
+            GL.BindTexture(TextureTarget.Texture2D, grassTex);
+            GL.Begin(BeginMode.Quads);
+
+            GL.Vertex3(-410, +325, -4.1f);
+            GL.Vertex3(+410, +325, -4.1f);
+            GL.Vertex3(+410, -325, -4.1f);
+            GL.Vertex3(-410, -325, -4.1f);
 
             GL.End();
+
+            GL.PopMatrix();
+
+        }
+
+        private void DrawGround()
+        {
 
             for (int i = 0; i < PlayingGround.Points.Length; i++)
             {
 
                 #region Stirikotniki
 
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.PushMatrix();
+
+                GL.BindTexture(TextureTarget.Texture2D, roadTex);
                 GL.Begin(BeginMode.Quads);
-                GL.Color3(Color.White);
 
                 Point p = PlayingGround.Points[i];
                 Point r = PlayingGround.Points[(i + 1) % PlayingGround.Points.Length];
@@ -343,15 +422,13 @@ namespace GeneticCars
                 float x1 = r.X;
                 float y1 = r.Y;
 
-                float dx = x1 - x0; //delta x
-                float dy = y1 - y0; //delta y
+                float dx = x1 - x0;
+                float dy = y1 - y0;
                 float linelength = (float)Math.Sqrt(dx * dx + dy * dy);
                 dx /= linelength;
                 dy /= linelength;
-                //Ok, (dx, dy) is now a unit vector pointing in the direction of the line
-                //A perpendicular vector is given by (-dy, dx)
-                float thickness = 70.0f; //Some number
-                float px = 0.5f * thickness * (-dy); //perpendicular vector with lenght thickness * 0.5
+                float thickness = 70.0f;
+                float px = 0.5f * thickness * (-dy);
                 float py = 0.5f * thickness * dx;
 
                 GL.Vertex3(x0 - px - 410, -(y0 + py) + 325, -4.0f);
@@ -361,9 +438,14 @@ namespace GeneticCars
 
                 GL.End();
 
+                GL.PopMatrix();
+
                 #endregion
 
                 #region Ovalni koti
+
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.PushMatrix();
 
                 GL.Begin(BeginMode.Polygon);
 
@@ -374,19 +456,11 @@ namespace GeneticCars
 
                 GL.End();
 
+                GL.PopMatrix();
+
                 #endregion
 
             }
-
-            GL.Begin(BeginMode.Points);
-
-            GL.Color3(Color.Red);
-            foreach (Point p in PlayingGround.Points)
-            {
-                GL.Vertex3(p.X - 410, -p.Y + 325, -3.5f);
-            }
-
-            GL.End();
         }
 
         private void DrawLearningRace()

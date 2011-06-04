@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-using OpenTK.Graphics.OpenGL; // Dodal Alex
+using OpenTK.Graphics.OpenGL;
 
 namespace GeneticCars
 {
@@ -154,29 +154,54 @@ namespace GeneticCars
 
         public void PaintOpenGL()
         {
-            lock (imageLocker)
-            {
-                RotateImage(image, angle);
-            }
+
+            RotateImage(image, angle);
             Point p = this.Pozicija;
 
             GL.MatrixMode(MatrixMode.Modelview);
             GL.PushMatrix();
             GL.LoadIdentity();
-            GL.Translate(p.X - 410, -(p.Y) + 325, -3.5);
+            GL.Translate(p.X - 410, -(p.Y) + 325, 0);
             GL.Rotate(-angle, 0, 0, 1);
+            GL.Rotate(90, 1, 0, 0);
+            GL.Rotate(90, 0, 1, 0);
+            GL.Scale(1, 1, 1); // 0.05
 
-            GL.Begin(BeginMode.Quads);
-            GL.Color3(this.barvaAvtomobila);
+            GL.BindTexture(TextureTarget.Texture2D, MainFrm.meshTex);
+            GL.Begin(BeginMode.Triangles);
 
-            GL.Vertex3(-7, +5, 0);
-            GL.Vertex3(+7, +5, 0);
-            GL.Vertex3(+7, -5, 0);
-            GL.Vertex3(-7, -5, 0);
+            foreach (Meshomatic.Tri t in MainFrm.avtoModel.Tris)
+            {
+                foreach (Meshomatic.Point po in t.Points())
+                {
+                    Meshomatic.Vector3 v = MainFrm.avtoModel.Vertices[po.Vertex];
+                    Meshomatic.Vector3 n = MainFrm.avtoModel.Normals[po.Normal];
+                    Meshomatic.Vector2 tc = MainFrm.avtoModel.TexCoords[po.TexCoord];
+                    GL.Normal3(n.X, n.Y, n.Z);
+                    GL.TexCoord2(tc.X, 1 - tc.Y);
+                    GL.Vertex3(v.X, v.Y, v.Z);
+                }
+            }
 
             GL.End();
 
             GL.PopMatrix();
+
+            if (this.Player)
+            {
+                // rotate camera
+                GL.PushMatrix();
+
+                GL.MatrixMode(MatrixMode.Projection);
+                OpenTK.Matrix4 perspective = OpenTK.Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 820 / 650, 1, 10000);
+                GL.LoadMatrix(ref perspective);
+                GL.Rotate(15, 1, 0, 0);
+                GL.Rotate(-90, 1, 0, 0);
+                GL.Rotate(90 + this.angle, 0, 0, 1);
+                GL.Translate(-p.X + 410, (p.Y) - 325, -30);
+
+                GL.PopMatrix();
+            }
         }
 
         public void Turn(float x)
